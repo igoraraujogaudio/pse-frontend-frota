@@ -61,9 +61,9 @@ export const disponibilidadeFrotaService = {
     })
   },
 
-  async getVeiculosPorContrato(contratoId: string): Promise<any[]> {
+  async getVeiculosPorContrato(contratoId: string): Promise<Record<string, unknown>[]> {
     // Veículos ativos de um contrato — usa endpoint de veículos
-    return apiClient.get<any[]>('/veiculos', { params: { contrato_ids: contratoId } })
+    return apiClient.get<Record<string, unknown>[]>('/veiculos', { params: { contrato_ids: contratoId } })
   },
 
   async getContratos(): Promise<Array<{ id: string; nome: string; codigo?: string }>> {
@@ -113,7 +113,7 @@ export const disponibilidadeFrotaService = {
     const data = await apiClient.get<DisponibilidadeRota[]>('/disponibilidade/historico', {
       params: { contrato_id: contratoId, veiculo_ids: veiculoIds.join(','), status: 'manutencao', limit: '500' }
     })
-    const result: Record<string, any> = {}
+    const result: Record<string, unknown> = {}
     for (const reg of data) {
       if (!result[reg.veiculo_id] && reg.manutencao_tipo) result[reg.veiculo_id] = reg
     }

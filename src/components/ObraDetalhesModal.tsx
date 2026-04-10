@@ -107,7 +107,7 @@ export function ObraDetalhesModal({ obra, isOpen, onClose, onStatusChange, bases
   const viabLoaded = useRef(false);
 
   // ===== Viabilidade Checklist state =====
-  const [viabChecklist, setViabChecklist] = useState<Record<string, any> | null>(null);
+  const [viabChecklist, setViabChecklist] = useState<Record<string, unknown> | null>(null);
   const viabChecklistLoaded = useRef(false);
 
   // ===== Materiais state =====
