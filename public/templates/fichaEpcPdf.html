@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de EPC - {{nome_equipe}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #16a34a;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #16a34a;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #16a34a;
+            padding: 8px 12px;
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            margin-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .info-value {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        th,
+        td {
+            padding: 8px 10px;
+            text-align: left;
+            border: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #16a34a;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        td {
+            font-size: 11px;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .tipo-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .tipo-devolucao {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .signature-section {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .signature-box {
+            text-align: center;
+        }
+
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+            font-size: 11px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        @media print {
+            body {
+                padding: 10px;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>FICHA DE CONTROLE DE EPC</h1>
+        <p>Equipamentos de Proteção Coletiva - Equipe</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Dados da Equipe</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Equipe</span>
+                <span class="info-value">{{nome_equipe}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Operação</span>
+                <span class="info-value">{{operacao}}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Contrato</span>
+                <span class="info-value">{{contrato}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">EPCs em Posse ({{total_itens}} itens - {{total_quantidade}} unidades)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th class="text-center">Qtd Total</th>
+                    <th class="text-center">Em Uso</th>
+                    <th class="text-center">Data Entrega</th>
+                    <th class="text-center">CA</th>
+                    <th class="text-center">Validade</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{itens_tabela}}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Devoluções ({{total_historico}})</div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="text-center">Data</th>
+                    <th class="text-center">Tipo</th>
+                    <th>Descrição</th>
+                    <th class="text-center">Qtd</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{historico_tabela}}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section" style="margin-top: 30px;">
+        <div class="section-title">Declaração de Responsabilidade</div>
+        <p style="font-size: 11px; line-height: 1.7; text-align: justify; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px;">
+            Declaro que os Equipamentos de Proteção Coletiva descritos nesta ficha foram entregues à equipe acima identificada, conforme as normas regulamentadoras vigentes. A equipe se compromete a utilizar, conservar e devolver os equipamentos ao término das atividades ou quando solicitado. Qualquer dano, extravio ou mau uso será de responsabilidade da equipe e de seu responsável direto.
+        </p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line">Responsável pela Equipe</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">SESMT / Almoxarifado</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Documento gerado em {{data_geracao}} às {{hora_geracao}}</p>
+    </div>
+
+</body>
+
+</html>

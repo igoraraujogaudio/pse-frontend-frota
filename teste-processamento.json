@@ -1,0 +1,41 @@
+[
+  {
+    "arquivo": "NF16028-35250720294467000107550010000160281771906785-nfe.pdf",
+    "chassi": "95355FTE0SR029283",
+    "dataEmissao": "02/07/2025",
+    "dataValidade": "02/07/2026",
+    "veiculo": {
+      "id": "108113b3-3895-4e9d-8a45-0dcbb38870d5",
+      "placa": "TGW5G31",
+      "modelo": "EXPRESS DRC 4X2",
+      "marca": "VW"
+    },
+    "status": "veiculo_encontrado"
+  },
+  {
+    "arquivo": "NF16029-35250720294467000107550010000160291822296552-nfe.pdf",
+    "chassi": "95355FTE0SR030322",
+    "dataEmissao": "02/07/2025",
+    "dataValidade": "02/07/2026",
+    "veiculo": {
+      "id": "1d92afc6-d23d-4ea0-93d6-2e6f6a23e329",
+      "placa": "TGW8H66",
+      "modelo": "EXPRESS DRC 4X2",
+      "marca": "VW"
+    },
+    "status": "veiculo_encontrado"
+  },
+  {
+    "arquivo": "NF16030-35250720294467000107550010000160301505259720-nfe.pdf",
+    "chassi": "95355FTE1SR029034",
+    "dataEmissao": "02/07/2025",
+    "dataValidade": "02/07/2026",
+    "veiculo": {
+      "id": "d141adbc-2b4e-428b-8d79-976619ad5c55",
+      "placa": "TGW1C50",
+      "modelo": "EXPRESS DRC 4X2",
+      "marca": "VW"
+    },
+    "status": "veiculo_encontrado"
+  }
+]

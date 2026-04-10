@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamento Técnico - Instalação e Migração de Serviços</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: white;
+    }
+
+    /* Capa */
+    .cover-page {
+        height: 100vh;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: white;
+        page-break-after: always;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cover-page::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23ffffff" stroke-width="0.1" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .logo-container {
+        margin-bottom: 60px;
+        z-index: 2;
+    }
+
+    .logo {
+        width: 300px;
+        height: 300px;
+        filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+    }
+
+    .logo-white {
+        filter: brightness(0) invert(1) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+    }
+
+    .logo-black {
+        filter: brightness(0) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.1));
+    }
+
+    .cover-title {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(45deg, #ffffff, #e0e0e0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        z-index: 2;
+    }
+
+    .cover-subtitle {
+        font-size: 1.5rem;
+        font-weight: 300;
+        margin-bottom: 40px;
+        opacity: 0.9;
+        z-index: 2;
+    }
+
+    .cover-client {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #4CAF50;
+        margin-bottom: 30px;
+        z-index: 2;
+    }
+
+    .cover-info {
+        font-size: 1rem;
+        opacity: 0.8;
+        z-index: 2;
+    }
+
+    .cover-info div {
+        margin: 5px 0;
+    }
+
+    /* Páginas de conteúdo */
+    .content-page {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: white;
+        page-break-after: always;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    .content-page:last-child {
+        page-break-after: avoid;
+    }
+
+    /* Header das páginas */
+    .page-header {
+        border-bottom: 3px solid #1a1a1a;
+        padding-bottom: 20px;
+        margin-bottom: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header .logo-small {
+        width: 60px;
+        height: 60px;
+    }
+
+    .page-header .company-info {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    /* Títulos */
+    h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 30px;
+        border-left: 5px solid #4CAF50;
+        padding-left: 20px;
+    }
+
+    h2 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: #2d2d2d;
+        margin: 40px 0 20px 0;
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 10px;
+    }
+
+    h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #333;
+        margin: 30px 0 15px 0;
+    }
+
+    h4 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #444;
+        margin: 20px 0 10px 0;
+    }
+
+    /* Parágrafos e listas */
+    p {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+
+    ul,
+    ol {
+        margin: 15px 0 15px 30px;
+    }
+
+    li {
+        margin-bottom: 8px;
+    }
+
+    /* Tabelas */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    th {
+        background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:nth-child(even) {
+        background: #f8f9fa;
+    }
+
+    tr:hover {
+        background: #e8f5e8;
+    }
+
+    /* Caixas de destaque */
+    .highlight-box {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-left: 5px solid #4CAF50;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-box {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-left: 5px solid #2196F3;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .warning-box {
+        background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+        border-left: 5px solid #FF9800;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+    }
+
+    /* Valores em destaque */
+    .price-highlight {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #4CAF50;
+        background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px 0;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+    }
+
+    /* Seções especiais */
+    .tech-specs {
+        background: linear-gradient(135deg, #f5f5f5, #eeeeee);
+        padding: 25px;
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px solid #e0e0e0;
+    }
+
+    .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+    }
+
+    .benefit-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-top: 4px solid #4CAF50;
+    }
+
+    .benefit-card h4 {
+        color: #4CAF50;
+        margin-bottom: 10px;
+    }
+
+    /* Footer */
+    .page-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 2px solid #e0e0e0;
+        text-align: center;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* CSS OTIMIZADO PARA IMPRESSÃO A4 */
+    @media print {
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            font-size: 9pt;
+            line-height: 1.2;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Estrutura de páginas otimizada - margens 0 */
+        .content-page {
+            width: 100%;
+            margin: 0;
+            padding: 8mm 10mm;
+            box-shadow: none;
+            page-break-after: always;
+            position: relative;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
+        .content-page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* Capa com cores preservadas */
+        .cover-page {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            page-break-after: always;
+        }
+
+        /* Controle de quebras ultra otimizado */
+        .highlight-box,
+        .info-box,
+        .warning-box,
+        .tech-specs,
+        .price-highlight,
+        .benefit-card {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin: 1mm 0;
+            padding: 2mm;
+        }
+
+        /* Tabelas legíveis */
+        table {
+            page-break-inside: auto;
+            break-inside: auto;
+            margin: 2mm 0;
+            font-size: 7pt;
+        }
+
+        th {
+            padding: 2mm 3mm;
+            font-size: 7pt;
+        }
+
+        td {
+            padding: 1mm 3mm;
+            font-size: 7pt;
+        }
+
+        /* Títulos com controle de quebra */
+        h1,
+        h2,
+        h3,
+        h4 {
+            page-break-after: avoid;
+            break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        h1 {
+            font-size: 14pt;
+            margin-bottom: 3mm;
+            padding-left: 4mm;
+            border-left-width: 2px;
+        }
+
+        h2 {
+            font-size: 11pt;
+            margin: 3mm 0 2mm 0;
+            padding-bottom: 1mm;
+        }
+
+        h3 {
+            font-size: 10pt;
+            margin: 2mm 0 1mm 0;
+        }
+
+        h4 {
+            font-size: 9pt;
+            margin: 1mm 0;
+        }
+
+        /* Texto e listas legíveis */
+        p,
+        li {
+            font-size: 8pt;
+            margin-bottom: 1mm;
+            line-height: 1.1;
+            orphans: 2;
+            widows: 2;
+        }
+
+        ul,
+        ol {
+            margin: 1mm 0 1mm 5mm;
+        }
+
+        li {
+            margin-bottom: 0.2mm;
+        }
+
+        /* Logos ajustados */
+        .logo {
+            width: 180px;
+            height: 180px;
+        }
+
+        .logo-small {
+            width: 35px;
+            height: 35px;
+        }
+
+        /* Header ultra compacto */
+        .page-header {
+            margin-bottom: 2mm;
+            padding-bottom: 1mm;
+            border-bottom-width: 0.5px;
+        }
+
+        .company-info {
+            font-size: 7pt;
+        }
+
+        /* Benefits grid legível */
+        .benefits-grid {
+            display: block;
+            margin: 2mm 0;
+        }
+
+        .benefit-card {
+            display: block;
+            width: 100%;
+            margin: 1mm 0;
+            padding: 2mm;
+            font-size: 7pt;
+        }
+
+        .benefit-card h4 {
+            font-size: 8pt;
+            margin-bottom: 1mm;
+        }
+
+        /* Price highlight com destaque adequado */
+        .price-highlight {
+            font-size: 12pt;
+            font-weight: 700;
+            padding: 3mm;
+            margin: 2mm 0;
+            background: #e8f5e8;
+            border-radius: 2mm;
+            text-align: center;
+        }
+
+        /* Quebras estratégicas */
+        .strategic-break {
+            page-break-before: always;
+            break-before: always;
+        }
+
+        /* Manter elementos relacionados juntos */
+        h2+.benefits-grid,
+        h2+.info-box,
+        h2+.highlight-box,
+        h2+.warning-box,
+        h2+table {
+            page-break-before: avoid;
+            break-before: avoid;
+        }
+
+        /* Evitar quebras órfãs */
+        .tech-specs h3+ul,
+        .info-box h3+ul,
+        .highlight-box h3+ul {
+            page-break-before: avoid;
+            break-before: avoid;
+        }
+    }
+
+    /* Animações sutis */
+    .fade-in {
+        animation: fadeIn 0.6s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+</head>
+
+<body>
+    <!-- CAPA -->
+    <div class="cover-page">
+        <div class="logo-container">
+            <img src="logo-gaudio.svg" alt="Gaudio Data Solutions" class="logo logo-white">
+        </div>
+
+        <h1 class="cover-title">ORÇAMENTO TÉCNICO</h1>
+        <p class="cover-subtitle">Instalação e Migração de Serviços em Novo Servidor</p>
+        <p class="cover-client">Enel</p>
+
+        <div class="cover-info">
+            <div><strong>Data:</strong> 18 de Agosto de 2025</div>
+            <div><strong>Validade:</strong> 15 dias</div>
+        </div>
+    </div>
+
+    <!-- PÁGINA 1: OBJETIVO E RESUMO EXECUTIVO -->
+    <div class="content-page">
+        <div class="page-header">
+            <img src="logo-gaudio.svg" alt="Gaudio Data Solutions" class="logo-small logo-black">
+            <div class="company-info">
+                <div><strong>Gaudio Data Solutions</strong></div>
+                <div>igoraraujogaudio@icloud.com</div>
+            </div>
+        </div>
+
+        <h1>Objetivo</h1>
+
+        <div class="highlight-box">
+            <p><strong>Este orçamento tem como finalidade a prestação de serviços técnicos para a criação de um novo
+                    servidor, com instalação do sistema operacional Windows 11, e a migração dos sistemas e serviços
+                    atualmente utilizados, mantendo a estrutura centralizada em uma única máquina, conforme já ocorre no
+                    ambiente atual.</strong></p>
+        </div>
+
+        <h2>Principais Benefícios da Migração</h2>
+
+        <div class="benefits-grid">
+            <div class="benefit-card">
+                <h4>🖥️ Sistema Atualizado</h4>
+                <p>Windows 11 com todas as atualizações de segurança e performance mais recentes.</p>
+            </div>
+            <div class="benefit-card">
+                <h4>🔄 Migração Completa</h4>
+                <p>Transferência de todos os sistemas sem perda de dados ou configurações.</p>
+            </div>
+            <div class="benefit-card">
+                <h4>🔒 Segurança Aprimorada</h4>
+                <p>Configurações de firewall, permissões e acesso remoto seguro.</p>
+            </div>
+            <div class="benefit-card">
+                <h4>⚡ Performance Otimizada</h4>
+                <p>Configuração otimizada para máximo desempenho dos serviços migrados.</p>
+            </div>
+        </div>
+
+        <h2>Serviços Incluídos</h2>
+
+        <ul>
+            <li><strong>🖥️ Instalação do Sistema Operacional</strong> - Windows 11 com configuração completa</li>
+            <li><strong>🌐 Migração de Serviço PHP/Laravel</strong> - Apache, PHP, Composer e projeto completo</li>
+            <li><strong>⚙️ Migração de Serviço C#</strong> - IIS, ASP.NET e configurações avançadas</li>
+            <li><strong>🗄️ Migração do Banco PostgreSQL</strong> - Backup, importação e testes de integridade</li>
+            <li><strong>🐍 Migração de Rotinas Python</strong> - Scripts, ambientes virtuais e agendamento</li>
+            <li><strong>🔗 Configuração de Acesso Remoto</strong> - RDP, AnyDesk ou TeamViewer com segurança</li>
+        </ul>
+
+        <div class="price-highlight">
+            <div>Investimento Total: R$ 4.500,00</div>
+            <div style="font-size: 1rem; margin-top: 10px; opacity: 0.8;">Suporte técnico por 4 meses incluído</div>
+        </div>
+
+        <div class="info-box">
+            <h3>⏱️ Prazo Estimado</h3>
+            <p><strong>2 dias úteis</strong> para conclusão completa de todos os serviços, pressupondo que toda a
+                preparação dos arquivos, backups e informações técnicas estejam previamente organizados.</p>
+        </div>
+    </div>
+
+    <!-- PÁGINA 2: ESCOPO DETALHADO DOS SERVIÇOS -->
+    <div class="content-page">
+        <div class="page-header">
+            <img src="logo-gaudio.svg" alt="Gaudio Data Solutions" class="logo-small logo-black">
+            <div class="company-info">
+                <div><strong>Gaudio Data Solutions</strong></div>
+                <div>Página 2</div>
+            </div>
+        </div>
+
+        <h1>Escopo Detalhado dos Serviços</h1>
+
+        <h2>2.1 Instalação do Sistema Operacional</h2>
+
+        <div class="tech-specs">
+            <h3>Windows 11 - Configuração Completa</h3>
+            <ul>
+                <li>Instalação limpa do Windows 11 Professional</li>
+                <li>Configuração básica do sistema e drivers</li>
+                <li>Instalação de todas as atualizações críticas</li>
+                <li>Configuração de permissões e políticas de segurança</li>
+                <li>Criação de usuários administrativos e operacionais</li>
+                <li>Configuração de firewall e proteções básicas</li>
+            </ul>
+        </div>
+
+        <h2>2.2 Migração de Serviço PHP/Laravel</h2>
+
+        <div class="tech-specs">
+            <h3>Ambiente Apache/PHP Completo</h3>
+            <ul>
+                <li>Instalação do Apache HTTP Server (versão mais recente estável)</li>
+                <li>Instalação do PHP com todas as extensões necessárias</li>
+                <li>Instalação e configuração do Composer</li>
+                <li>Migração completa do projeto Laravel existente</li>
+                <li>Configuração do arquivo .env com parâmetros corretos</li>
+                <li>Ajuste de permissões de diretórios (storage, cache, logs)</li>
+                <li>Configuração de Virtual Hosts no Apache</li>
+                <li>Testes completos de funcionamento e performance</li>
+            </ul>
+        </div>
+
+        <h2>2.3 Migração de Serviço em C#</h2>
+
+        <div class="tech-specs">
+            <h3>IIS e ASP.NET Configuration</h3>
+            <ul>
+                <li>Instalação e configuração completa do IIS</li>
+                <li>Instalação do .NET Framework/Core necessário</li>
+                <li>Publicação do sistema C# (ASP.NET ou API)</li>
+                <li>Configuração de Application Pool otimizado</li>
+                <li>Ajuste de permissões de diretórios e usuários</li>
+                <li>Configuração de diretórios virtuais</li>
+                <li>Implementação de regras de URL Rewrite</li>
+                <li>Testes de funcionalidade e performance</li>
+            </ul>
+        </div>
+
+        <h2>2.4 Migração do Banco PostgreSQL</h2>
+
+        <div class="tech-specs">
+            <h3>Database Migration Completa</h3>
+            <ul>
+                <li>Instalação do PostgreSQL (versão compatível)</li>
+                <li>Configuração de parâmetros de performance</li>
+                <li>Importação completa do backup (dump) do banco atual</li>
+                <li>Verificação de integridade dos dados migrados</li>
+                <li>Configuração de roles e permissões de usuários</li>
+                <li>Testes de conectividade com os sistemas</li>
+                <li>Configuração de backup automático</li>
+                <li>Otimização de índices e consultas</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- PÁGINA 3: CRONOGRAMA E CONDIÇÕES -->
+    <div class="content-page">
+        <div class="page-header">
+            <img src="logo-gaudio.svg" alt="Gaudio Data Solutions" class="logo-small logo-black">
+            <div class="company-info">
+                <div><strong>Gaudio Data Solutions</strong></div>
+                <div>Página 3</div>
+            </div>
+        </div>
+
+        <h1>Cronograma e Condições</h1>
+
+        <h2>2.5 Migração de Rotinas Python</h2>
+
+        <div class="tech-specs">
+            <h3>Ambiente Python Completo</h3>
+            <ul>
+                <li>Instalação do Python (versão compatível com scripts existentes)</li>
+                <li>Criação e configuração de ambientes virtuais (venv)</li>
+                <li>Instalação de todas as dependências (pip install)</li>
+                <li>Migração completa dos scripts Python existentes</li>
+                <li>Configuração de execução automática via Task Scheduler</li>
+                <li>Configuração de logs e monitoramento de execução</li>
+                <li>Testes de execução manual e automática</li>
+                <li>Validação de resultados e outputs</li>
+            </ul>
+        </div>
+
+        <h2>2.6 Configuração de Acesso Remoto</h2>
+
+        <div class="tech-specs">
+            <h3>Acesso Seguro e Confiável</h3>
+            <ul>
+                <li>Instalação de ferramenta de acesso remoto (RDP, AnyDesk ou TeamViewer)</li>
+                <li>Configuração de conexões seguras e criptografadas</li>
+                <li>Ajustes de firewall para permitir acesso controlado</li>
+                <li>Configuração de permissões de usuários para acesso</li>
+                <li>Testes de conectividade e estabilidade</li>
+                <li>Documentação de credenciais e procedimentos</li>
+            </ul>
+        </div>
+
+        <h2>Cronograma Detalhado</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Etapa</th>
+                    <th>Tempo Estimado</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Instalação do SO</strong></td>
+                    <td>0,5 dia útil</td>
+                    <td>Windows 11 + configuração básica</td>
+                </tr>
+                <tr>
+                    <td><strong>Serviços Base</strong></td>
+                    <td>0,5 dia útil</td>
+                    <td>Apache, IIS, PostgreSQL, Python</td>
+                </tr>
+                <tr>
+                    <td><strong>Migração PHP/Laravel</strong></td>
+                    <td>0,5 dia útil</td>
+                    <td>Projeto completo + testes</td>
+                </tr>
+                <tr>
+                    <td><strong>Migração C# (IIS)</strong></td>
+                    <td>0,25 dia útil</td>
+                    <td>Publicação + configurações</td>
+                </tr>
+                <tr>
+                    <td><strong>Migração PostgreSQL</strong></td>
+                    <td>0,25 dia útil</td>
+                    <td>Backup + importação + testes</td>
+                </tr>
+                <tr>
+                    <td><strong>Scripts Python</strong></td>
+                    <td>0,25 dia útil</td>
+                    <td>Migração + agendamento</td>
+                </tr>
+                <tr>
+                    <td><strong>Acesso Remoto</strong></td>
+                    <td>0,25 dia útil</td>
+                    <td>Configuração + testes finais</td>
+                </tr>
+                <tr style="background: #e8f5e8; font-weight: bold;">
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong>2 dias úteis</strong></td>
+                    <td>Projeto completo</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning-box">
+            <h3>⚠️ Observação Importante</h3>
+            <p>Este cronograma pressupõe que toda a preparação dos arquivos, backups e informações técnicas estejam
+                previamente organizados, e que o ambiente do novo servidor não apresente imprevistos técnicos.</p>
+        </div>
+    </div>
+
+    <!-- PÁGINA 4: INVESTIMENTO E CONDIÇÕES GERAIS -->
+    <div class="content-page">
+        <div class="page-header">
+            <img src="logo-gaudio.svg" alt="Gaudio Data Solutions" class="logo-small logo-black">
+            <div class="company-info">
+                <div><strong>Gaudio Data Solutions</strong></div>
+                <div>Página 4</div>
+            </div>
+        </div>
+
+        <h1>Investimento e Condições</h1>
+
+        <h2>Valores e Investimento</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Valor (R$)</th>
+                    <th>Observações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Serviços de instalação e migração</strong></td>
+                    <td style="text-align: center;"><strong>R$ 4.500,00</strong></td>
+                    <td>Valor fixo para todos os serviços</td>
+                </tr>
+                <tr>
+                    <td><strong>Suporte técnico por 4 meses</strong></td>
+                    <td style="text-align: center; color: #4CAF50;"><strong>Incluso</strong></td>
+                    <td>Após migração completa</td>
+                </tr>
+                <tr style="background: #e8f5e8; font-weight: bold;">
+                    <td><strong>TOTAL ESTIMADO</strong></td>
+                    <td style="text-align: center;"><strong>R$ 4.500,00</strong></td>
+                    <td>Investimento único</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="price-highlight">
+            <strong>Investimento Total: R$ 4.500,00</strong>
+            <div style="font-size: 1rem; margin-top: 10px; opacity: 0.8;">
+                Inclui 4 meses de suporte técnico pós-migração
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>💡 Observação sobre Custos Extras</h3>
+            <p>O valor poderá ser ajustado caso surjam demandas adicionais ou imprevistos técnicos durante a execução.
+                Após o período de 4 meses de suporte incluído, eventuais serviços adicionais poderão ser cobrados conforme
+                acordo prévio.</p>
+        </div>
+
+        <h2>Condições Gerais</h2>
+
+        <div class="tech-specs">
+            <h3>Responsabilidades e Requisitos</h3>
+            <ul>
+                <li><strong>Estrutura:</strong> Todos os serviços serão configurados em um único servidor, conforme
+                    estrutura atual do cliente</li>
+                <li><strong>Entrega:</strong> O ambiente será entregue em pleno funcionamento, com todos os sistemas
+                    validados</li>
+                <li><strong>Suporte:</strong> Suporte técnico adicional será prestado sob demanda, conforme necessidade,
+                    após o período gratuito</li>
+            </ul>
+
+            <h3>O Cliente Deverá Fornecer Previamente:</h3>
+            <ul>
+                <li>✅ Código-fonte completo dos sistemas (Laravel, C# e scripts Python)</li>
+                <li>✅ Backup (dump) completo do banco de dados PostgreSQL</li>
+                <li>✅ Arquivos de configuração (.env, web.config, etc.)</li>
+                <li>✅ Informações sobre versões utilizadas e dependências específicas</li>
+                <li>✅ Credenciais de acesso aos sistemas atuais</li>
+                <li>✅ Documentação de configurações especiais, se houver</li>
+            </ul>
+        </div>
+
+        <div class="highlight-box">
+            <h3>🎯 Garantias Incluídas</h3>
+            <ul>
+                <li><strong>Funcionamento Completo:</strong> Todos os sistemas migrados funcionando perfeitamente</li>
+                <li><strong>Integridade dos Dados:</strong> Garantia de que nenhum dado será perdido na migração</li>
+                <li><strong>Performance Otimizada:</strong> Configurações otimizadas para máximo desempenho</li>
+                <li><strong>Documentação:</strong> Entrega de documentação técnica das configurações realizadas</li>
+                <li><strong>Suporte Incluído:</strong> 4 meses de suporte técnico para dúvidas e ajustes</li>
+            </ul>
+        </div>
+
+        <h2>Validade da Proposta</h2>
+
+        <div class="warning-box">
+            <h3>📅 Prazo de Validade</h3>
+            <p><strong>Esta proposta é válida por 15 dias a partir da data de emissão (18/08/2025).</strong></p>
+            <p>Após este prazo, os valores e condições poderão ser revisados conforme disponibilidade e demanda.</p>
+        </div>
+
+        <div class="page-footer">
+            <p><strong>Gaudio Data Solutions</strong> | igoraraujogaudio@icloud.com</p>
+            <p>Especialistas em Migração e Infraestrutura de Sistemas</p>
+        </div>
+    </div>
+</body>
+
+</html>
