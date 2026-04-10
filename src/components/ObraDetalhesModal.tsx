@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,7 +108,31 @@ export function ObraDetalhesModal({ obra, isOpen, onClose, onStatusChange, bases
   const viabLoaded = useRef(false);
 
   // ===== Viabilidade Checklist state =====
-  const [viabChecklist, setViabChecklist] = useState<Record<string, unknown> | null>(null);
+  interface ViabChecklistData {
+    tensao_rede?: string;
+    viabilidade?: string;
+    condicao_tracado?: string;
+    autorizacao_passagem?: string;
+    nome_contato?: string;
+    telefone_contato?: string;
+    contato_whatsapp?: boolean;
+    necessario_lv?: boolean;
+    sinal_telefone?: boolean;
+    desligamento_necessario?: boolean;
+    poda_arvores?: boolean;
+    interferencias_identificadas?: boolean;
+    numero_chave_equipamento?: string;
+    interferencias_descricao?: string;
+    obs_nao_apto?: string;
+    data_revisao?: string;
+    alerta_seguranca?: boolean;
+    alerta_seguranca_obs?: string;
+    fotos_alerta_seguranca?: string[];
+    resumo_tecnico?: string;
+    fotos_postes?: string[];
+    [key: string]: string | boolean | string[] | undefined;
+  }
+  const [viabChecklist, setViabChecklist] = useState<ViabChecklistData | null>(null);
   const viabChecklistLoaded = useRef(false);
 
   // ===== Materiais state =====
@@ -1599,7 +1624,7 @@ export function ObraDetalhesModal({ obra, isOpen, onClose, onStatusChange, bases
                           <div className="flex flex-wrap gap-2 mt-2">
                             {viabChecklist.fotos_alerta_seguranca.map((url: string, i: number) => (
                               <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                                <img src={url} alt={`Alerta ${i + 1}`} className="w-20 h-20 object-cover rounded-lg border border-amber-200 hover:opacity-80 transition-opacity" />
+                                <Image src={url} alt={`Alerta ${i + 1}`} width={80} height={80} className="w-20 h-20 object-cover rounded-lg border border-amber-200 hover:opacity-80 transition-opacity" unoptimized />
                               </a>
                             ))}
                           </div>
@@ -1630,7 +1655,7 @@ export function ObraDetalhesModal({ obra, isOpen, onClose, onStatusChange, bases
                         <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
                           {viabChecklist.fotos_postes.map((url: string, i: number) => (
                             <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative">
-                              <img src={url} alt={`Poste ${i + 1}`} className="w-full aspect-square object-cover rounded-lg border border-gray-200 group-hover:opacity-80 transition-opacity" />
+                              <Image src={url} alt={`Poste ${i + 1}`} width={200} height={200} className="w-full aspect-square object-cover rounded-lg border border-gray-200 group-hover:opacity-80 transition-opacity" unoptimized />
                               <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded">{i + 1}</span>
                             </a>
                           ))}
