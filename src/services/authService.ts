@@ -1,4 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_FROTA_URL ?? '';
+// authService — BFF pattern
+// Todas as chamadas passam pelas API routes do Next.js (same-origin).
+// Tokens ficam em cookies httpOnly gerenciados pelo servidor.
+// O browser NUNCA fala diretamente com o Backend Rust.
 
 export interface AuthTokenResponse {
   access_token: string;
@@ -34,15 +37,9 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const authService = {
-  /**
-   * Login via Backend Rust — POST /api/v1/auth/login
-   * Aceita email ou matrícula como identifier.
-   */
-  async signIn(
-    identifier: string,
-    password: string,
-  ): Promise<LoginResponse> {
-    const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+  /** Login via BFF — POST /api/auth/login (same-origin, sem CORS) */
+  async signIn(identifier: string, password: string): Promise<LoginResponse> {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, password }),
@@ -50,39 +47,14 @@ export const authService = {
     return handleResponse<LoginResponse>(response);
   },
 
-  /**
-   * Logout via Backend Rust — POST /api/v1/auth/logout
-   */
-  async signOut(accessToken: string): Promise<void> {
-    const response = await fetch(`${API_URL}/api/v1/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    await handleResponse<unknown>(response);
+  /** Logout via BFF — POST /api/auth/logout */
+  async signOut(): Promise<void> {
+    await fetch('/api/auth/logout', { method: 'POST' });
   },
 
-  /**
-   * Dados do usuário autenticado — GET /api/v1/auth/me
-   */
-  async getCurrentUser(accessToken: string): Promise<UserProfile> {
-    const response = await fetch(`${API_URL}/api/v1/auth/me`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return handleResponse<UserProfile>(response);
-  },
-
-  /**
-   * Solicitar reset de senha — POST /api/v1/auth/forgot-password
-   * Sempre retorna sucesso (anti-enumeração).
-   */
+  /** Forgot password via BFF — POST /api/auth/forgot-password */
   async resetPassword(email: string): Promise<void> {
-    const response = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
+    const response = await fetch('/api/auth/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -90,33 +62,24 @@ export const authService = {
     await handleResponse<unknown>(response);
   },
 
-  /**
-   * Alterar senha — POST /api/v1/auth/change-password
-   */
-  async changePassword(
-    accessToken: string,
-    newPassword: string,
-  ): Promise<void> {
-    const response = await fetch(`${API_URL}/api/v1/auth/change-password`, {
+  /** Change password via BFF — POST /api/auth/change-password (usuário logado) */
+  async changePassword(newPassword: string): Promise<void> {
+    const response = await fetch('/api/auth/change-password', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ new_password: newPassword }),
     });
     await handleResponse<unknown>(response);
   },
 
-  /**
-   * Refresh token — POST /api/v1/auth/refresh
-   */
-  async refreshToken(refreshToken: string): Promise<AuthTokenResponse> {
-    const response = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+  /** Reset password via link de email — POST /api/auth/reset-password
+   *  Caso especial: token vem da URL, não do cookie. */
+  async resetPasswordWithToken(accessToken: string, newPassword: string): Promise<void> {
+    const response = await fetch('/api/auth/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      body: JSON.stringify({ access_token: accessToken, new_password: newPassword }),
     });
-    return handleResponse<AuthTokenResponse>(response);
+    await handleResponse<unknown>(response);
   },
 };

@@ -10,6 +10,12 @@ import { cookies } from 'next/headers';
 
 const API_URL = process.env.NEXT_PUBLIC_API_FROTA_URL ?? '';
 const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias
+const IS_PROD = process.env.NODE_ENV === 'production';
+const USE_SECURE = IS_PROD && (process.env.NEXT_PUBLIC_API_FROTA_URL?.startsWith('https') ?? false);
+
+function cookieOpts(maxAge: number) {
+  return { httpOnly: true, secure: USE_SECURE, sameSite: 'lax' as const, path: '/', maxAge };
+}
 
 // ---------------------------------------------------------------------------
 // Cookie helpers
@@ -21,37 +27,13 @@ function setCookiesOnResponse(
   refreshToken: string,
   expiresIn: number,
 ) {
-  response.cookies.set('access_token', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: expiresIn,
-  });
-  response.cookies.set('refresh_token', refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  });
+  response.cookies.set('access_token', accessToken, cookieOpts(expiresIn));
+  response.cookies.set('refresh_token', refreshToken, cookieOpts(REFRESH_TOKEN_MAX_AGE));
 }
 
 function clearCookiesOnResponse(response: NextResponse) {
-  response.cookies.set('access_token', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 0,
-  });
-  response.cookies.set('refresh_token', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 0,
-  });
+  response.cookies.set('access_token', '', cookieOpts(0));
+  response.cookies.set('refresh_token', '', cookieOpts(0));
 }
 
 // ---------------------------------------------------------------------------

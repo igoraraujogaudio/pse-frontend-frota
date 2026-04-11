@@ -137,32 +137,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── signIn ──────────────────────────────────────────────
 
   async function signIn(identifier: string, password: string) {
-    // 1. Authenticate via backend (handles matrícula→email resolution)
+    // 1. Login via BFF route (same-origin, cookies setados automaticamente)
     const loginData: LoginResponse = await authService.signIn(identifier, password);
 
-    // 2. Store tokens in httpOnly cookies via session API route
-    await fetch('/api/auth/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        access_token: loginData.access_token,
-        refresh_token: loginData.refresh_token,
-        expires_in: loginData.expires_in,
-      }),
-    });
-
-    // 3. Set user state from login response
+    // 2. Set user state from login response
     if (loginData.user) {
       setUser(mapProfileToUser(loginData.user));
       setUserContratoIds(loginData.user.contrato_ids ?? []);
     } else {
-      // Fallback: load profile via proxy
       const profile = await fetchProfileViaProxy();
       setUser(mapProfileToUser(profile));
       setUserContratoIds(profile.contrato_ids ?? []);
     }
 
-    // 4. Schedule auto-refresh based on expires_in from login response
+    // 3. Schedule auto-refresh based on expires_in from login response
     scheduleRefresh(loginData.expires_in);
   }
 
@@ -170,18 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function signOut() {
     try {
-      // 1. Get access_token from cookie to call backend logout
-      const sessionRes = await fetch('/api/auth/session');
-      const session = await sessionRes.json();
-
-      if (session.access_token) {
-        await authService.signOut(session.access_token).catch(() => {
-          // Ignore errors — we still want to clear local state
-        });
-      }
-
-      // 2. Clear httpOnly cookies
-      await fetch('/api/auth/session', { method: 'DELETE' });
+      // Logout via BFF route (limpa cookies e chama backend)
+      await authService.signOut();
     } catch {
       // Best-effort — always clear local state
     } finally {

@@ -1,12 +1,23 @@
 // API Route: /api/auth/refresh
-// Proactive token refresh — reads refresh_token from httpOnly cookie,
-// calls the backend, and updates cookies with new tokens.
+// Lê refresh_token do cookie httpOnly, chama o backend, atualiza cookies.
 
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 const API_URL = process.env.NEXT_PUBLIC_API_FROTA_URL ?? '';
-const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias
+const IS_PROD = process.env.NODE_ENV === 'production';
+const USE_SECURE = IS_PROD && (process.env.NEXT_PUBLIC_API_FROTA_URL?.startsWith('https') ?? false);
+
+function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: USE_SECURE,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+  };
+}
 
 export async function POST() {
   const cookieStore = await cookies();
@@ -24,57 +35,20 @@ export async function POST() {
     });
 
     if (!backendRes.ok) {
-      // Refresh failed — clear cookies
-      const response = NextResponse.json(
-        { error: 'Refresh failed' },
-        { status: 401 },
-      );
-      response.cookies.set('access_token', '', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 0,
-      });
-      response.cookies.set('refresh_token', '', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        path: '/',
-        maxAge: 0,
-      });
+      const response = NextResponse.json({ error: 'Refresh failed' }, { status: 401 });
+      response.cookies.set('access_token', '', cookieOptions(0));
+      response.cookies.set('refresh_token', '', cookieOptions(0));
       return response;
     }
 
     const data = await backendRes.json();
     const { access_token, refresh_token, expires_in } = data;
 
-    const response = NextResponse.json({
-      ok: true,
-      expires_in,
-    });
-
-    response.cookies.set('access_token', access_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/',
-      maxAge: expires_in,
-    });
-
-    response.cookies.set('refresh_token', refresh_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/',
-      maxAge: REFRESH_TOKEN_MAX_AGE,
-    });
-
+    const response = NextResponse.json({ ok: true, expires_in });
+    response.cookies.set('access_token', access_token, cookieOptions(expires_in));
+    response.cookies.set('refresh_token', refresh_token, cookieOptions(REFRESH_TOKEN_MAX_AGE));
     return response;
   } catch {
-    return NextResponse.json(
-      { error: 'Refresh request failed' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: 'Refresh request failed' }, { status: 503 });
   }
 }

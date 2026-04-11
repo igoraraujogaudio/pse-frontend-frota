@@ -1,6 +1,4 @@
 // API Route: /api/auth/session
-// Requisitos: 4.5, 5.1, 5.3, 5.5
-//
 // POST: recebe tokens do login e seta cookies httpOnly
 // GET: verifica se sessão existe (retorna authenticated + access_token)
 // DELETE: limpa cookies de sessão
@@ -8,7 +6,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias em segundos
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias
+const IS_PROD = process.env.NODE_ENV === 'production';
+const USE_SECURE = IS_PROD && (process.env.NEXT_PUBLIC_API_FROTA_URL?.startsWith('https') ?? false);
+
+function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: USE_SECURE,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+  };
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -32,23 +42,8 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ ok: true });
-
-  response.cookies.set('access_token', access_token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: expires_in,
-  });
-
-  response.cookies.set('refresh_token', refresh_token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: REFRESH_TOKEN_MAX_AGE,
-  });
-
+  response.cookies.set('access_token', access_token, cookieOptions(expires_in));
+  response.cookies.set('refresh_token', refresh_token, cookieOptions(REFRESH_TOKEN_MAX_AGE));
   return response;
 }
 
@@ -68,22 +63,7 @@ export async function GET() {
 
 export async function DELETE() {
   const response = NextResponse.json({ ok: true });
-
-  response.cookies.set('access_token', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 0,
-  });
-
-  response.cookies.set('refresh_token', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 0,
-  });
-
+  response.cookies.set('access_token', '', cookieOptions(0));
+  response.cookies.set('refresh_token', '', cookieOptions(0));
   return response;
 }
