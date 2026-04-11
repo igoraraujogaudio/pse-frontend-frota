@@ -113,7 +113,8 @@ export const disponibilidadeFrotaService = {
     const data = await apiClient.get<DisponibilidadeRota[]>('/disponibilidade/historico', {
       params: { contrato_id: contratoId, veiculo_ids: veiculoIds.join(','), status: 'manutencao', limit: '500' }
     })
-    const result: Record<string, unknown> = {}
+    type ManutencaoPick = Pick<DisponibilidadeRota, 'veiculo_id' | 'manutencao_tipo' | 'manutencao_problema' | 'manutencao_previsao' | 'manutencao_oficina_id' | 'manutencao_oficina_nome' | 'manutencao_complexidade' | 'manutencao_setor' | 'observacoes' | 'data_referencia'>
+    const result: Record<string, ManutencaoPick> = {}
     for (const reg of data) {
       if (!result[reg.veiculo_id] && reg.manutencao_tipo) result[reg.veiculo_id] = reg
     }
