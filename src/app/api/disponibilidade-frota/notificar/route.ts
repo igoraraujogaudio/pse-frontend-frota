@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { supabase, createClientWithAuth } from '@/lib/supabase';
 import { sendEmailToMultiple } from '@/lib/email';
 import { sendWhatsAppToMultiple } from '@/lib/whatsapp';
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
     const token = authHeader.replace('Bearer ', '');
-    const supabaseAuth = createClient();
+    const supabaseAuth = createClientWithAuth(token);
     const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser(token);
     if (authError || !authUser) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'contrato_id e data_referencia são obrigatórios' }, { status: 400 });
     }
 
-    const supabaseAdmin = createClient();
+    const supabaseAdmin = supabase;
 
     // Buscar contrato
     const { data: contrato } = await supabaseAdmin

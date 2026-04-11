@@ -4,12 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'ID do documento é obrigatório' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from('laudo_acustico_os')
       .select('*')
       .eq('documento_id', documentoId)
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o documento é realmente um laudo acústico
-    const { data: documento, error: docError } = await supabaseAdmin
+    const { data: documento, error: docError } = await getSupabaseAdmin()
       .from('documentos_veiculo')
       .select('tipo_documento')
       .eq('id', documentoId)
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     const fileName = `laudos-acusticos-os/${documentoId}/${sanitizedOS}-${Date.now()}.${fileExt}`;
 
     // 1. Upload do arquivo
-    const { error: uploadError } = await supabaseAdmin.storage
+    const { error: uploadError } = await getSupabaseAdmin().storage
       .from('vehicle-documents')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -93,12 +95,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Obter URL pública
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = getSupabaseAdmin().storage
       .from('vehicle-documents')
       .getPublicUrl(fileName);
 
     // 3. Inserir OS no banco
-    const { data, error: insertError } = await supabaseAdmin
+    const { data, error: insertError } = await getSupabaseAdmin()
       .from('laudo_acustico_os')
       .insert({
         documento_id: documentoId,
@@ -139,7 +141,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Buscar a OS para obter a URL do arquivo
-    const { data: os, error: fetchError } = await supabaseAdmin
+    const { data: os, error: fetchError } = await getSupabaseAdmin()
       .from('laudo_acustico_os')
       .select('url_arquivo')
       .eq('id', osId)
@@ -155,7 +157,7 @@ export async function DELETE(request: NextRequest) {
     const fileName = urlParts.slice(-3).join('/'); // laudos-acusticos-os/documentoId/arquivo.pdf
 
     // Deletar arquivo do storage
-    const { error: deleteFileError } = await supabaseAdmin.storage
+    const { error: deleteFileError } = await getSupabaseAdmin().storage
       .from('vehicle-documents')
       .remove([fileName]);
 
@@ -165,7 +167,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Deletar registro do banco
-    const { error: deleteError } = await supabaseAdmin
+    const { error: deleteError } = await getSupabaseAdmin()
       .from('laudo_acustico_os')
       .delete()
       .eq('id', osId);

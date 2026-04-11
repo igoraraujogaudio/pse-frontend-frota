@@ -4,7 +4,7 @@ import type { ContratoSharePointConfig } from '@/config/contratos-sharepoint';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+function getSupabaseAdmin() { return createClient(supabaseUrl, supabaseServiceKey); }
 
 // GET - Carregar todas as configurações ou uma específica por contrato
 export async function GET(req: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
     if (contratoNome) {
       // Buscar configuração específica
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('sharepoint_contratos_config')
         .select('*')
         .eq('contrato_nome', contratoNome)
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       });
     } else {
       // Buscar todas as configurações
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('sharepoint_contratos_config')
         .select('*')
         .order('contrato_nome');
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Validar se o contrato existe na tabela contratos
-    const { data: contrato, error: contratoError } = await supabaseAdmin
+    const { data: contrato, error: contratoError } = await getSupabaseAdmin()
       .from('contratos')
       .select('id, nome')
       .eq('nome', contratoNome)
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar se já existe
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await getSupabaseAdmin()
       .from('sharepoint_contratos_config')
       .select('id')
       .eq('contrato_nome', contratoNome)
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
     let result;
     if (existing) {
       // Atualizar
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('sharepoint_contratos_config')
         .update(configData)
         .eq('contrato_nome', contratoNome)
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
       result = data;
     } else {
       // Inserir
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await getSupabaseAdmin()
         .from('sharepoint_contratos_config')
         .insert({
           ...configData,
@@ -221,7 +221,7 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('sharepoint_contratos_config')
       .delete()
       .eq('contrato_nome', contratoNome);

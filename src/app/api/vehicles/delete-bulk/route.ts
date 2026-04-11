@@ -9,12 +9,14 @@ import { createClientWithAuth } from '@/lib/supabase';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     // 1. VERIFICAÇÃO PRÉVIA - Buscar veículos que serão afetados
     console.log('🔍 Verificando veículos existentes...');
-    const { data: veiculosExistentes, error: buscaError } = await supabaseAdmin
+    const { data: veiculosExistentes, error: buscaError } = await getSupabaseAdmin()
       .from('veiculos')
       .select('id, placa, modelo, status, contrato_id, base_id, equipe_id')
       .in('placa', placas);
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
     console.log('💾 Criando backup dos dados...');
     
     // Backup dos veículos
-    const { data: backupVeiculos, error: backupError } = await supabaseAdmin
+    const { data: backupVeiculos, error: backupError } = await getSupabaseAdmin()
       .from('veiculos')
       .insert(
         veiculosExistentes.map(veiculo => ({
@@ -132,19 +134,19 @@ export async function POST(request: NextRequest) {
     const veiculoIds = veiculosExistentes.map(v => v.id);
     
     // Backup de documentos de veículos
-    const { data: documentos } = await supabaseAdmin
+    const { data: documentos } = await getSupabaseAdmin()
       .from('documentos_veiculo')
       .select('*')
       .in('veiculo_id', veiculoIds);
 
     // Backup de histórico de movimentações
-    const { data: movimentacoes } = await supabaseAdmin
+    const { data: movimentacoes } = await getSupabaseAdmin()
       .from('historico_movimentacoes')
       .select('*')
       .in('veiculo_id', veiculoIds);
 
     // Backup de ordens de desconto
-    const { data: ordensDesconto } = await supabaseAdmin
+    const { data: ordensDesconto } = await getSupabaseAdmin()
       .from('ordens_desconto')
       .select('*')
       .in('veiculo_id', veiculoIds);
@@ -159,7 +161,7 @@ export async function POST(request: NextRequest) {
 
     // Deletar documentos de veículos
     if (documentos && documentos.length > 0) {
-      const { error: deleteDocsError } = await supabaseAdmin
+      const { error: deleteDocsError } = await getSupabaseAdmin()
         .from('documentos_veiculo')
         .delete()
         .in('veiculo_id', veiculoIds);
@@ -173,7 +175,7 @@ export async function POST(request: NextRequest) {
 
     // Deletar histórico de movimentações
     if (movimentacoes && movimentacoes.length > 0) {
-      const { error: deleteMovError } = await supabaseAdmin
+      const { error: deleteMovError } = await getSupabaseAdmin()
         .from('historico_movimentacoes')
         .delete()
         .in('veiculo_id', veiculoIds);
@@ -187,7 +189,7 @@ export async function POST(request: NextRequest) {
 
     // Deletar ordens de desconto
     if (ordensDesconto && ordensDesconto.length > 0) {
-      const { error: deleteOrdensError } = await supabaseAdmin
+      const { error: deleteOrdensError } = await getSupabaseAdmin()
         .from('ordens_desconto')
         .delete()
         .in('veiculo_id', veiculoIds);
@@ -201,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     // 5. EXCLUSÃO DOS VEÍCULOS
     console.log('🚗 Deletando veículos...');
-    const { data: veiculosDeletados, error: deleteError } = await supabaseAdmin
+    const { data: veiculosDeletados, error: deleteError } = await getSupabaseAdmin()
       .from('veiculos')
       .delete()
       .in('id', veiculoIds)
@@ -219,7 +221,7 @@ export async function POST(request: NextRequest) {
 
     // 6. VERIFICAÇÃO PÓS-EXCLUSÃO
     console.log('🔍 Verificando exclusão...');
-    const { data: veiculosRestantes, error: verificacaoError } = await supabaseAdmin
+    const { data: veiculosRestantes, error: verificacaoError } = await getSupabaseAdmin()
       .from('veiculos')
       .select('id, placa')
       .in('placa', placas);
@@ -254,7 +256,7 @@ export async function POST(request: NextRequest) {
 
     // Salvar log no banco (se existir tabela de logs)
     try {
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('logs_operacoes')
         .insert(logOperacao);
     } catch {

@@ -4,12 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
     const fileName = `${vehicleId}/${sanitizedDocType}${sanitizedSubtipo ? `_${sanitizedSubtipo}` : ''}-${Date.now()}.${fileExt}`;
 
     // 1. Upload do arquivo
-    const { error: uploadError } = await supabaseAdmin.storage
+    const { error: uploadError } = await getSupabaseAdmin().storage
       .from('vehicle-documents')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Obter URL pública
-    const { data: { publicUrl } } = supabaseAdmin.storage
+    const { data: { publicUrl } } = getSupabaseAdmin().storage
       .from('vehicle-documents')
       .getPublicUrl(fileName);
 
@@ -100,7 +102,7 @@ export async function POST(request: NextRequest) {
 
       console.log('📝 Inserindo novo documento:', insertData);
 
-      const { error: insertError } = await supabaseAdmin
+      const { error: insertError } = await getSupabaseAdmin()
         .from('documentos_veiculo')
         .insert(insertData);
 
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
         updateData
       });
 
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await getSupabaseAdmin()
         .from('documentos_veiculo')
         .update(updateData)
         .eq('id', documentId);

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Usar o mesmo padrão do PDF (igual ao route.ts principal)
-const supabase = createClient(
+function getSupabase() {
+  return createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
       console.log('🔗 API - URLs para salvar:', sanitizedDamage);
       
       // UPDATE igual ao PDF (mesmo padrão que funciona)
-      const { error: damageError } = await supabase
+      const { error: damageError } = await getSupabase()
         .from('discount_orders')
         .update({ danos_evidencias_urls: sanitizedDamage })
         .eq('id', orderId);
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Update document URLs
     if (sanitizedDocs.length > 0) {
       // UPDATE igual ao PDF (mesmo padrão que funciona)
-      const { error: documentError } = await supabase
+      const { error: documentError } = await getSupabase()
         .from('discount_orders')
         .update({ nf_os_documentos_urls: sanitizedDocs })
         .eq('id', orderId);

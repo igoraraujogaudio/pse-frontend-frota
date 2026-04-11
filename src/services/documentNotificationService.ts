@@ -43,6 +43,11 @@ class DocumentNotificationService {
       }
     } catch (error) { console.error('Erro ao processar notificações de vencimento:', error) }
   }
+
+  async testNotificationSystem(): Promise<void> {
+    // no-op: método mantido para compatibilidade com rotas de notificação
+    console.log('testNotificationSystem: no-op stub')
+  }
 }
 
 export const documentNotificationService = new DocumentNotificationService()

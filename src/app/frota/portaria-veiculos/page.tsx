@@ -2,8 +2,22 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ConsultaPortariaContent } from '@/app/portaria/consulta/content'
-import { CarrosParticularesContent } from '@/app/carros-particulares/content'
+
+// =============================================================================
+// STUB: Os content components de portaria/carros-particulares foram removidos
+// porque pertenciam ao módulo legado que usava supabase diretamente.
+// TODO: Reimplementar usando apiClient via proxy para o backend Rust.
+// =============================================================================
+
+function PlaceholderTab({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+      <h2 className="text-xl font-semibold mb-2">{title}</h2>
+      <p className="text-sm">{description}</p>
+      <p className="text-xs mt-2 text-gray-400">Módulo sendo migrado para o backend Rust (apiClient).</p>
+    </div>
+  )
+}
 
 const tabs = [
   { id: 'portaria', label: 'Consulta de Portaria' },
@@ -35,8 +49,8 @@ export default function PortariaVeiculosPage() {
           ))}
         </nav>
       </div>
-      {activeTab === 'portaria' && <ConsultaPortariaContent />}
-      {activeTab === 'carros' && <CarrosParticularesContent />}
+      {activeTab === 'portaria' && <PlaceholderTab title="Consulta de Portaria" description="Consulte movimentações de veículos na portaria." />}
+      {activeTab === 'carros' && <PlaceholderTab title="Carros Particulares" description="Gerencie carros particulares cadastrados." />}
     </div>
   )
 }

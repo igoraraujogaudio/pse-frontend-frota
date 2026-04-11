@@ -37,6 +37,7 @@ export interface FormChecklistGrupoItem {
 export interface ItemCatalogo {
   id: string; codigo: string; nome: string; descricao?: string; categoria: string
   subcategoria?: string; unidade_medida: string; valor_unitario?: number
+  requer_laudo?: boolean
   ativo: boolean; criado_em: string; atualizado_em: string
 }
 
@@ -79,5 +80,8 @@ export const checklistGrupoService = {
   },
   async adicionarGrupoChecklistContrato(dados: { contrato_id: string; grupo_id: string; item_id: string; item_nome: string; item_descricao?: string; item_categoria: string; obrigatorio: boolean; requer_laudo: boolean; requer_inventario: boolean; ordem_exibicao: number }): Promise<void> {
     await apiClient.post('/checklist-items-contrato', { body: { ...dados, ativo: true } })
+  },
+  async gerarGruposAutomaticamente(): Promise<Array<{ grupo_nome: string; grupo_descricao: string; grupo_categoria: string; itens: unknown[] }>> {
+    try { return await apiClient.get('/checklist-grupos/auto-generate', { silent: true }) } catch { return [] }
   }
 }

@@ -7,12 +7,14 @@ import * as XLSX from 'xlsx';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest) {
     const data_fim = searchParams.get('data_fim') || '';
 
     // Buscar veículos bloqueados usando a view
-    let vehiclesQuery = supabaseAdmin
+    let vehiclesQuery = getSupabaseAdmin()
       .from('v_veiculos_bloqueados_relatorio')
       .select('*')
       .order('data_bloqueio', { ascending: false });

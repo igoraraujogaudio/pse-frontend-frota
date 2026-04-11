@@ -2,10 +2,22 @@
 
 import { useState, Suspense } from 'react'
 import { cn } from '@/lib/utils'
-import { ManutencoesContent } from '@/app/manutencoes/content'
-import { MaintenanceHistoryContent } from '@/app/manutencoes/historico/content'
-import { PreventivaContent } from '@/app/preventiva/content'
-import { OficinasContent } from '@/app/manutencoes/oficinas/content'
+
+// =============================================================================
+// STUB: Os content components de manutenções/preventiva/oficinas foram removidos
+// porque pertenciam ao módulo legado que usava supabase diretamente.
+// TODO: Reimplementar usando apiClient via proxy para o backend Rust.
+// =============================================================================
+
+function PlaceholderTab({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+      <h2 className="text-xl font-semibold mb-2">{title}</h2>
+      <p className="text-sm">{description}</p>
+      <p className="text-xs mt-2 text-gray-400">Módulo sendo migrado para o backend Rust (apiClient).</p>
+    </div>
+  )
+}
 
 const tabs = [
   { id: 'manutencoes', label: 'Manutenções' },
@@ -41,10 +53,10 @@ export default function ManutencoesGeralPage() {
       </div>
 
       <Suspense fallback={<div>Carregando...</div>}>
-        {activeTab === 'manutencoes' && <ManutencoesContent />}
-        {activeTab === 'historico' && <MaintenanceHistoryContent />}
-        {activeTab === 'preventiva' && <PreventivaContent />}
-        {activeTab === 'oficinas' && <OficinasContent />}
+        {activeTab === 'manutencoes' && <PlaceholderTab title="Manutenções" description="Gerencie solicitações de manutenção e acompanhe o status dos veículos." />}
+        {activeTab === 'historico' && <PlaceholderTab title="Histórico de Manutenções" description="Veja todas as manutenções finalizadas ou canceladas." />}
+        {activeTab === 'preventiva' && <PlaceholderTab title="Manutenção Preventiva" description="Sistema de manutenção preventiva por quilometragem." />}
+        {activeTab === 'oficinas' && <PlaceholderTab title="Oficinas" description="Gerencie oficinas cadastradas." />}
       </Suspense>
     </div>
   )

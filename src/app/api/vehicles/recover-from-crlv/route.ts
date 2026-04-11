@@ -4,12 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 // Extrair texto de um PDF usando pdfjs-dist
 async function extractTextFromPdf(pdfBuffer: ArrayBuffer): Promise<string[]> {
@@ -205,7 +207,7 @@ export async function GET() {
     console.log('🔍 [RECOVER] Buscando documentos CRLV na tabela documentos_veiculo...');
 
     // 1. Buscar todos os documentos CRLV
-    const { data: documentos, error: docError } = await supabaseAdmin
+    const { data: documentos, error: docError } = await getSupabaseAdmin()
       .from('documentos_veiculo')
       .select('id, veiculo_id, tipo_documento, url_arquivo, expira_em')
       .eq('tipo_documento', 'crlv')
@@ -231,7 +233,7 @@ export async function GET() {
 
     // 3. Verificar quais veículos já existem na tabela veiculos
     const veiculoIds = Array.from(veiculoMap.keys());
-    const { data: existingVeiculos } = await supabaseAdmin
+    const { data: existingVeiculos } = await getSupabaseAdmin()
       .from('veiculos')
       .select('id')
       .in('id', veiculoIds);
@@ -303,7 +305,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔄 [RECOVER] Iniciando recuperação de veículos... (dryRun: ${dryRun})`);
 
     // 1. Buscar documentos CRLV
-    const { data: documentos, error: docError } = await supabaseAdmin
+    const { data: documentos, error: docError } = await getSupabaseAdmin()
       .from('documentos_veiculo')
       .select('id, veiculo_id, tipo_documento, url_arquivo, expira_em')
       .eq('tipo_documento', 'crlv')
@@ -328,7 +330,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Verificar quais já existem
     const veiculoIds = filterIds || Array.from(veiculoMap.keys());
-    const { data: existingVeiculos } = await supabaseAdmin
+    const { data: existingVeiculos } = await getSupabaseAdmin()
       .from('veiculos')
       .select('id')
       .in('id', veiculoIds);
@@ -397,7 +399,7 @@ export async function POST(request: NextRequest) {
           previews.push({ veiculo_id: veiculoId, data: veiculoRecord });
         } else {
           // Inserir no banco
-          const { error: insertError } = await supabaseAdmin
+          const { error: insertError } = await getSupabaseAdmin()
             .from('veiculos')
             .insert(veiculoRecord);
 

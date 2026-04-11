@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
+function getSupabase() {
+  return createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     const hoje = new Date().toISOString().split('T')[0]
 
     // 1. Contar notificações antes da limpeza
-    const { count: totalAntes, error: errorAntes } = await supabase
+    const { count: totalAntes, error: errorAntes } = await getSupabase()
       .from('notificacoes')
       .select('*', { count: 'exact', head: true })
       .gte('criado_em', hoje + 'T00:00:00.000Z')
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.log(`📊 Total de notificações hoje antes da limpeza: ${totalAntes || 0}`)
 
     // 2. Buscar todas as notificações de hoje
-    const { data: notificacoes, error: errorBusca } = await supabase
+    const { data: notificacoes, error: errorBusca } = await getSupabase()
       .from('notificacoes')
       .select('*')
       .gte('criado_em', hoje + 'T00:00:00.000Z')
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // 4. Remover duplicatas
     if (idsParaRemover.length > 0) {
-      const { error: errorDelete } = await supabase
+      const { error: errorDelete } = await getSupabase()
         .from('notificacoes')
         .delete()
         .in('id', idsParaRemover)
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Contar notificações após a limpeza
-    const { count: totalDepois } = await supabase
+    const { count: totalDepois } = await getSupabase()
       .from('notificacoes')
       .select('*', { count: 'exact', head: true })
       .gte('criado_em', hoje + 'T00:00:00.000Z')

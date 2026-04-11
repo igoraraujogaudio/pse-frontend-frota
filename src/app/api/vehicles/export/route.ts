@@ -7,12 +7,14 @@ import * as XLSX from 'xlsx';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+function getSupabaseAdmin() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
   }
 });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Exportando Excel com filtro de contratos:', contratoIds);
 
     // Buscar veículos com dados relacionados (apenas ativos)
-    let vehiclesQuery = supabaseAdmin
+    let vehiclesQuery = getSupabaseAdmin()
       .from('veiculos')
       .select(`
         *,
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
     
     const rulesPromises = vehicles.map(async (vehicle) => {
       try {
-        const { data: rulesData } = await supabaseAdmin
+        const { data: rulesData } = await getSupabaseAdmin()
           .rpc('obter_documentos_obrigatorios_veiculo', { p_veiculo_id: vehicle.id });
         
         return {
@@ -79,7 +81,7 @@ export async function GET(request: NextRequest) {
       
       for (let i = 0; i < vehicleIds.length; i += batchSize) {
         const batch = vehicleIds.slice(i, i + batchSize);
-        const { data: documentsData, error: documentsError } = await supabaseAdmin
+        const { data: documentsData, error: documentsError } = await getSupabaseAdmin()
           .from('documentos_veiculo')
           .select('id, veiculo_id, tipo_documento, url_arquivo, expira_em')
           .in('veiculo_id', batch);
