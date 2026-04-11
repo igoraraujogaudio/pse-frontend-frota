@@ -64,8 +64,7 @@ function ResetPasswordContent() {
     setLoading(true);
 
     try {
-      const { error } = await authService.updatePassword(password);
-      if (error) throw error;
+      await authService.changePassword(token, password);
       
       notify('Senha alterada com sucesso!', 'success');
       router.push('/login');

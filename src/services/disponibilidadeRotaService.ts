@@ -1,5 +1,4 @@
 import { apiClient } from '@/lib/apiClient'
-import { supabase } from '@/lib/supabase'
 
 export type StatusDisponibilidade = 'disponivel' | 'em_operacao' | 'manutencao'
 export type ManutencaoTipo = 'em_manutencao' | 'em_orcamento'
@@ -67,14 +66,10 @@ export const disponibilidadeFrotaService = {
   },
 
   async getContratos(): Promise<Array<{ id: string; nome: string; codigo?: string }>> {
-    // Contratos ativos — still from Supabase (shared resource, not frota-specific)
-    const { data, error } = await supabase
-      .from('contratos')
-      .select('id, nome, codigo')
-      .eq('status', 'ativo')
-      .order('nome', { ascending: true })
-    if (error) throw error
-    return data || []
+    // Contratos ativos — via Backend Rust API
+    return apiClient.get<Array<{ id: string; nome: string; codigo?: string }>>('/contratos', {
+      params: { status: 'ativo' }
+    })
   },
 
   async upsert(payload: {
@@ -149,15 +144,10 @@ export const disponibilidadeFrotaService = {
   },
 
   async getOficinasPorContrato(contratoId: string): Promise<Array<{ id: string; nome: string }>> {
-    // Oficinas — still from Supabase (shared resource)
-    const { data, error } = await supabase
-      .from('oficinas')
-      .select('id, nome')
-      .eq('ativo', true)
-      .eq('contrato_id', contratoId)
-      .order('nome', { ascending: true })
-    if (error) throw error
-    return data || []
+    // Oficinas — via Backend Rust API
+    return apiClient.get<Array<{ id: string; nome: string }>>('/oficinas', {
+      params: { contrato_id: contratoId, ativo: 'true' }
+    })
   },
 
   async getHistorico(filtros: {

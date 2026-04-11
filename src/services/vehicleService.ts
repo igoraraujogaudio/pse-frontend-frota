@@ -1,5 +1,4 @@
 import { apiClient } from '@/lib/apiClient'
-import { supabase } from '@/lib/supabase'
 import { Vehicle, VehicleDocument, LaudoAcusticoOS } from '@/types'
 
 export const vehicleService = {
@@ -85,7 +84,7 @@ export const vehicleService = {
     return apiClient.put<Vehicle>(`/veiculos/${vehicleId}`, { body: { equipe_id: teamId } })
   },
 
-  // Upload still uses Supabase Storage via Next.js API route, but returns storage path (not public URL)
+  // Upload via Next.js API route (server-side storage), returns storage path (not public URL)
   uploadDocument: async (file: File, vehicleId: string, type: string): Promise<VehicleDocument> => {
     const formData = new FormData()
     formData.append('file', file)
@@ -140,22 +139,21 @@ export const vehicleService = {
     await apiClient.delete(`/laudos/acustico/${id}`)
   },
 
-  // Upload de OS laudo acústico — uses Supabase Storage, stores path (not public URL)
+  // Upload de OS laudo acústico — via Next.js API route (server-side storage)
   uploadOSLaudoAcustico: async (file: File, documentoId: string, numeroOS: string, descricao?: string): Promise<LaudoAcusticoOS> => {
-    const fileExt = file.name.split('.').pop()
-    const sanitize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9\-_\.]/g, '_').toLowerCase()
-    const fileName = `laudos-acusticos-os/${documentoId}/${sanitize(numeroOS)}-${Date.now()}.${fileExt}`
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('documentoId', documentoId)
+    formData.append('numeroOS', numeroOS)
+    if (descricao) formData.append('descricao', descricao)
 
-    const { error: uploadError } = await supabase.storage
-      .from('vehicle-documents')
-      .upload(fileName, file, { cacheControl: '3600', upsert: true, contentType: file.type || 'application/pdf' })
-    if (uploadError) throw uploadError
-
-    // Store the storage path (bucket/path), NOT a public URL
-    const storagePath = `vehicle-documents/${fileName}`
-
-    return apiClient.post<LaudoAcusticoOS>('/laudos/acustico', {
-      body: { documento_id: documentoId, numero_os: numeroOS, descricao, url_arquivo: storagePath }
+    const response = await fetch('/api/laudo-acustico-os', {
+      method: 'POST',
+      body: formData,
     })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Erro no upload do laudo acústico')
+
+    return result as LaudoAcusticoOS
   }
 }

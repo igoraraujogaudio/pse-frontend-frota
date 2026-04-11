@@ -1,157 +1,67 @@
-import { supabase } from './supabase'
-import { toast } from 'sonner'
+﻿import { toast } from 'sonner'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_FROTA_URL || 'http://localhost:3001'
-const API_PREFIX = '/api/v1/frota'
-
+const API_BASE_URL = '/api/proxy'
+const API_PREFIX = '/frota'
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
-
-interface RequestOptions {
-  params?: Record<string, string | number | boolean | undefined>
-  body?: unknown
-  headers?: Record<string, string>
-  /** Skip automatic error toast (caller handles errors) */
-  silent?: boolean
-}
-
-interface ApiErrorResponse {
-  error: string
-  code?: string
-  details?: Record<string, string[]>
-}
+interface RequestOptions { params?: Record<string, string | number | boolean | undefined>; body?: unknown; headers?: Record<string, string>; silent?: boolean }
+interface ApiErrorResponse { error: string; code?: string; details?: Record<string, string[]> }
 
 class ApiClientError extends Error {
   status: number
   code?: string
   details?: Record<string, string[]>
-
-  constructor(message: string, status: number, code?: string, details?: Record<string, string[]>) {
-    super(message)
-    this.name = 'ApiClientError'
-    this.status = status
-    this.code = code
-    this.details = details
+  constructor(msg: string, status: number, code?: string, details?: Record<string, string[]>) {
+    super(msg); this.name = 'ApiClientError'; this.status = status; this.code = code; this.details = details
   }
 }
 
-async function getAuthToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.access_token) {
-    window.location.href = '/login'
-    throw new ApiClientError('Sessão expirada', 401)
-  }
-  return session.access_token
+function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>) {
+  const url = `${API_BASE_URL}${API_PREFIX}${path}`
+  const sp = new URLSearchParams()
+  if (params) Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== '') sp.set(k, String(v)) })
+  const qs = sp.toString()
+  return qs ? `${url}?${qs}` : url
 }
 
-function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined>): string {
-  const url = new URL(`${API_BASE_URL}${API_PREFIX}${path}`)
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== '') {
-        url.searchParams.set(key, String(value))
-      }
-    })
+function showErrorToast(status: number, err: ApiErrorResponse) {
+  if (status === 401) { toast.error('Sessão expirada. Redirecionando para login...'); setTimeout(() => { window.location.href = '/login' }, 1500) }
+  else if (status === 403) toast.error(`Sem permissão: ${err.code || 'operação não autorizada'}`)
+  else if (status === 422) {
+    if (err.details) { const m = Object.entries(err.details).map(([f, e]) => `${f}: ${e.join(', ')}`).join('\n'); toast.error(`Validação: ${m}`) }
+    else toast.error(err.error || 'Dados inválidos')
   }
-  return url.toString()
+  else if (status === 429) toast.error('Muitas requisições. Aguarde um momento.')
+  else if (status >= 500) toast.error('Erro interno do servidor. Tente novamente.')
+  else toast.error(err.error || 'Erro na requisição')
 }
 
-async function handleResponse<T>(response: Response, silent: boolean): Promise<T> {
-  if (response.ok) {
-    // Handle 204 No Content
-    if (response.status === 204) return undefined as T
-    return response.json()
-  }
-
-  let errorBody: ApiErrorResponse
-  try {
-    errorBody = await response.json()
-  } catch {
-    errorBody = { error: 'Erro desconhecido' }
-  }
-
-  const { status } = response
-
-  if (!silent) {
-    switch (status) {
-      case 401:
-        toast.error('Sessão expirada. Redirecionando para login...')
-        setTimeout(() => { window.location.href = '/login' }, 1500)
-        break
-      case 403:
-        toast.error(`Sem permissão: ${errorBody.code || 'operação não autorizada'}`)
-        break
-      case 422:
-        if (errorBody.details) {
-          const msgs = Object.entries(errorBody.details)
-            .map(([field, errs]) => `${field}: ${errs.join(', ')}`)
-            .join('\n')
-          toast.error(`Validação: ${msgs}`)
-        } else {
-          toast.error(errorBody.error || 'Dados inválidos')
-        }
-        break
-      case 429:
-        toast.error('Muitas requisições. Aguarde um momento.')
-        break
-      default:
-        if (status >= 500) {
-          toast.error('Erro interno do servidor. Tente novamente.')
-        } else {
-          toast.error(errorBody.error || 'Erro na requisição')
-        }
-    }
-  }
-
-  throw new ApiClientError(errorBody.error, status, errorBody.code, errorBody.details)
+async function handleResponse<T>(res: Response, silent: boolean): Promise<T> {
+  if (res.ok) return res.status === 204 ? (undefined as T) : res.json()
+  let err: ApiErrorResponse
+  try { err = await res.json() } catch { err = { error: 'Erro desconhecido' } }
+  if (!silent) showErrorToast(res.status, err)
+  throw new ApiClientError(err.error, res.status, err.code, err.details)
 }
 
-async function request<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<T> {
-  const token = await getAuthToken()
-  const url = buildUrl(path, options.params)
-
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${token}`,
-    ...options.headers,
-  }
-
-  if (options.body && !(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json'
-  }
-
-  const response = await fetch(url, {
-    method,
-    headers,
-    body: options.body
-      ? options.body instanceof FormData
-        ? options.body
-        : JSON.stringify(options.body)
-      : undefined,
-  })
-
-  return handleResponse<T>(response, options.silent ?? false)
+async function request<T>(method: HttpMethod, path: string, opts: RequestOptions = {}): Promise<T> {
+  const { params, body, headers = {}, silent = false } = opts
+  const url = buildUrl(path, params)
+  const init: RequestInit = { method, headers: { 'Content-Type': 'application/json', ...headers }, credentials: 'same-origin' as RequestCredentials }
+  if (body !== undefined && method !== 'GET') init.body = JSON.stringify(body)
+  return handleResponse<T>(await fetch(url, init), silent)
 }
 
-/** HTTP client for the Rust Frota API. Sends JWT from Supabase Auth automatically. */
 export const apiClient = {
-  get: <T>(path: string, options?: RequestOptions) => request<T>('GET', path, options),
-  post: <T>(path: string, options?: RequestOptions) => request<T>('POST', path, options),
-  put: <T>(path: string, options?: RequestOptions) => request<T>('PUT', path, options),
-  delete: <T>(path: string, options?: RequestOptions) => request<T>('DELETE', path, options),
-  patch: <T>(path: string, options?: RequestOptions) => request<T>('PATCH', path, options),
-
-  /**
-   * Get a temporary signed URL for a private file in Supabase Storage.
-   * The backend validates JWT + permissions before generating the URL.
-   */
-  getSignedUrl: async (bucket: string, path: string): Promise<string> => {
-    const result = await request<{ signed_url: string; expires_in: number }>(
-      'POST',
-      '/storage/signed-url',
-      { body: { bucket, path }, silent: true }
-    )
-    return result.signed_url
+  get<T>(path: string, opts?: RequestOptions) { return request<T>('GET', path, opts) },
+  post<T>(path: string, opts?: RequestOptions) { return request<T>('POST', path, opts) },
+  put<T>(path: string, opts?: RequestOptions) { return request<T>('PUT', path, opts) },
+  delete<T = void>(path: string, opts?: RequestOptions) { return request<T>('DELETE', path, opts) },
+  patch<T>(path: string, opts?: RequestOptions) { return request<T>('PATCH', path, opts) },
+  async getSignedUrl(bucket: string, filePath: string): Promise<string> {
+    const d = await request<{ signed_url: string }>('POST', '/storage/signed-url', { body: { bucket, path: filePath } })
+    return d.signed_url
   },
 }
 
 export { ApiClientError }
-export type { ApiErrorResponse, RequestOptions }
+export type { RequestOptions, ApiErrorResponse }

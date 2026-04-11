@@ -1,5 +1,4 @@
 import { apiClient } from '@/lib/apiClient'
-import { supabase } from '@/lib/supabase'
 import { DiscountOrder } from '@/types/discountOrder'
 
 export const discountOrderService = {
@@ -53,17 +52,21 @@ export const discountOrderService = {
     testemunha2_nome: string
     testemunha2_cpf: string
   }) {
-    // 1. Upload to Supabase Storage (private bucket)
-    const fileName = `signed-discount-order-${orderId}-${Date.now()}.pdf`
-    const bucket = 'ordens-desconto-pdfs'
+    // 1. Upload via Next.js API route (server-side storage using backend)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('orderId', orderId)
+    formData.append('action', action)
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, file, { contentType: 'application/pdf', upsert: false })
-    if (uploadError) throw new Error(`Erro no upload: ${uploadError.message}`)
-
-    // Store the storage path (not public URL)
-    const storagePath = `${bucket}/${fileName}`
+    const uploadRes = await fetch('/api/discount-orders/upload-signed', {
+      method: 'POST',
+      body: formData,
+    })
+    if (!uploadRes.ok) {
+      const err = await uploadRes.json().catch(() => ({}))
+      throw new Error(err.error || 'Erro no upload do arquivo assinado')
+    }
+    const { storagePath } = await uploadRes.json()
 
     // 2. Update order via Rust API
     const updateData: Partial<DiscountOrder> = {
@@ -88,7 +91,8 @@ export const discountOrderService = {
     const order = await apiClient.put<DiscountOrder>(`/ordens-desconto/${orderId}`, { body: updateData })
 
     // 3. Send email (fire-and-forget via Next.js API route)
-    // Get a signed URL for the email attachment
+    const bucket = 'ordens-desconto-pdfs'
+    const fileName = storagePath.replace(`${bucket}/`, '')
     const signedUrl = await apiClient.getSignedUrl(bucket, fileName)
     try {
       fetch('/api/email/send-discount-order', {
