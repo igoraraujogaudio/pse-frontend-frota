@@ -1,72 +1,74 @@
-// API Route: /api/auth/login
-// Proxy login para o Backend Rust e seta cookies httpOnly com os tokens.
-// Elimina CORS pois o frontend chama same-origin.
-
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_URL = process.env.NEXT_PUBLIC_API_FROTA_URL ?? '';
-const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60; // 7 dias
-const IS_PROD = process.env.NODE_ENV === 'production';
-const USE_SECURE = IS_PROD && (API_URL.startsWith('https'));
-
-function cookieOpts(maxAge: number) {
-  return { httpOnly: true, secure: USE_SECURE, sameSite: 'lax' as const, path: '/', maxAge };
-}
-
 export async function POST(request: NextRequest) {
-  if (!API_URL) {
-    console.error('[auth/login] NEXT_PUBLIC_API_FROTA_URL não configurada');
-    return NextResponse.json(
-      { error: 'Servidor não configurado (API_URL vazia)' },
-      { status: 503 },
-    );
-  }
-
-  let body: unknown;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
-  }
+    const API_URL = process.env.NEXT_PUBLIC_API_FROTA_URL || process.env.API_FROTA_URL || '';
 
-  const targetUrl = `${API_URL}/api/v1/auth/login`;
+    if (!API_URL) {
+      return NextResponse.json(
+        { error: 'NEXT_PUBLIC_API_FROTA_URL não configurada no servidor', debug: { env_keys: Object.keys(process.env).filter(k => k.includes('API') || k.includes('FROTA') || k.includes('NEXT_PUBLIC')) } },
+        { status: 503 },
+      );
+    }
 
-  try {
-    console.log(`[auth/login] Proxy → ${targetUrl}`);
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return NextResponse.json({ error: 'Body inválido', debug: String(e) }, { status: 400 });
+    }
 
-    const backendRes = await fetch(targetUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    const targetUrl = `${API_URL}/api/v1/auth/login`;
 
-    const data = await backendRes.json().catch(() => ({}));
+    let backendRes: Response;
+    try {
+      backendRes = await fetch(targetUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch (fetchErr) {
+      return NextResponse.json(
+        { error: 'Falha ao conectar no backend', debug: { targetUrl, message: String(fetchErr) } },
+        { status: 502 },
+      );
+    }
+
+    let data: Record<string, unknown>;
+    try {
+      data = await backendRes.json();
+    } catch {
+      const text = await backendRes.text().catch(() => '');
+      return NextResponse.json(
+        { error: 'Backend retornou resposta não-JSON', debug: { status: backendRes.status, body: text.slice(0, 500) } },
+        { status: 502 },
+      );
+    }
 
     if (!backendRes.ok) {
-      console.log(`[auth/login] Backend retornou ${backendRes.status}: ${JSON.stringify(data)}`);
       return NextResponse.json(
-        { error: data.error ?? 'Erro no login', code: data.code },
+        { error: (data.error as string) ?? 'Erro no login', code: data.code },
         { status: backendRes.status },
       );
     }
 
-    // Set httpOnly cookies with tokens
     const response = NextResponse.json(data);
 
-    if (data.access_token) {
-      response.cookies.set('access_token', data.access_token, cookieOpts(data.expires_in ?? 3600));
-    }
+    const secure = API_URL.startsWith('https');
+    const cookieOpts = { httpOnly: true, secure, sameSite: 'lax' as const, path: '/' };
 
+    if (data.access_token) {
+      response.cookies.set('access_token', data.access_token as string, { ...cookieOpts, maxAge: (data.expires_in as number) ?? 3600 });
+    }
     if (data.refresh_token) {
-      response.cookies.set('refresh_token', data.refresh_token, cookieOpts(REFRESH_TOKEN_MAX_AGE));
+      response.cookies.set('refresh_token', data.refresh_token as string, { ...cookieOpts, maxAge: 7 * 24 * 60 * 60 });
     }
 
     return response;
   } catch (err) {
-    console.error(`[auth/login] Falha ao conectar em ${targetUrl}:`, err);
     return NextResponse.json(
-      { error: `Não foi possível conectar ao servidor backend (${API_URL})` },
-      { status: 502 },
+      { error: 'Erro interno na API route /api/auth/login', debug: String(err) },
+      { status: 500 },
     );
   }
 }
